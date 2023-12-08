@@ -8,7 +8,7 @@ export class CatsService {
     return 'This action adds a new cat'
   }
 
-  findAll() {
+  findAll(params: any) {
     return `This action returns all cats`
   }
 

@@ -9,30 +9,44 @@ import {
   HttpException,
   HttpStatus,
   UseFilters,
-  ParseIntPipe,
-  UsePipes,
+  Query,
+  DefaultValuePipe,
+  ParseBoolPipe,
+  UseGuards,
+  // SetMetadata,
+  // ParseIntPipe,
+  // UsePipes,
 } from '@nestjs/common'
 import { CatsService } from './cats.service'
 import { CreateCatDto } from './dto/create-cat.dto'
 import { UpdateCatDto } from './dto/update-cat.dto'
 import { HttpExceptionFilter } from 'src/http-exception/http-exception.filter'
 import { ValidationPipe } from 'src/validation/validation.pipe'
+import { ParseIntPipe } from 'src/parse-int/parse-int.pipe'
+import { RolesGuard } from 'src/roles/roles.guard'
+import { Roles } from 'src/roles/roles.decorator'
 
 @Controller('cats')
+@UseGuards(RolesGuard)
 @UseFilters(HttpExceptionFilter)
 export class CatsController {
   constructor(private readonly catsService: CatsService) {}
 
   @Post()
   // @UsePipes(ValidationPipe)
-  create(@Body(ValidationPipe) createCatDto: CreateCatDto) {
+  @Roles('admin')
+  create(@Body(new ValidationPipe()) createCatDto: CreateCatDto) {
     return this.catsService.create(createCatDto)
   }
 
   @Get()
-  findAll() {
+  findAll(
+    @Query('active', new DefaultValuePipe(false), ParseBoolPipe)
+    active: boolean,
+    @Query('page', new DefaultValuePipe(0), ParseIntPipe) page: number,
+  ) {
     try {
-      return this.catsService.findAll()
+      return this.catsService.findAll({ active, page })
     } catch (error) {
       throw new HttpException(
         { status: HttpStatus.FORBIDDEN, error: 'This is a custom message' },
@@ -46,10 +60,7 @@ export class CatsController {
 
   @Get(':id')
   findOne(
-    @Param(
-      'id',
-      new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
-    )
+    @Param('id', ParseIntPipe)
     id: number,
   ) {
     return this.catsService.findOne(id)
