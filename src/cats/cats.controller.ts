@@ -9,12 +9,14 @@ import {
   HttpException,
   HttpStatus,
   UseFilters,
-  ForbiddenException,
+  ParseIntPipe,
+  UsePipes,
 } from '@nestjs/common'
 import { CatsService } from './cats.service'
 import { CreateCatDto } from './dto/create-cat.dto'
 import { UpdateCatDto } from './dto/update-cat.dto'
 import { HttpExceptionFilter } from 'src/http-exception/http-exception.filter'
+import { ValidationPipe } from 'src/validation/validation.pipe'
 
 @Controller('cats')
 @UseFilters(HttpExceptionFilter)
@@ -22,14 +24,13 @@ export class CatsController {
   constructor(private readonly catsService: CatsService) {}
 
   @Post()
-  create(@Body() createCatDto: CreateCatDto) {
-    throw new ForbiddenException()
+  // @UsePipes(ValidationPipe)
+  create(@Body(ValidationPipe) createCatDto: CreateCatDto) {
     return this.catsService.create(createCatDto)
   }
 
   @Get()
   findAll() {
-    throw new Error('')
     try {
       return this.catsService.findAll()
     } catch (error) {
@@ -44,17 +45,26 @@ export class CatsController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.catsService.findOne(+id)
+  findOne(
+    @Param(
+      'id',
+      new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    id: number,
+  ) {
+    return this.catsService.findOne(id)
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateCatDto: UpdateCatDto) {
+  update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateCatDto: UpdateCatDto,
+  ) {
     return this.catsService.update(+id, updateCatDto)
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
+  remove(@Param('id', ParseIntPipe) id: number) {
     return this.catsService.remove(+id)
   }
 }
