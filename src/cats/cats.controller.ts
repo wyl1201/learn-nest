@@ -13,6 +13,7 @@ import {
   DefaultValuePipe,
   ParseBoolPipe,
   UseGuards,
+  UseInterceptors,
   // SetMetadata,
   // ParseIntPipe,
   // UsePipes,
@@ -25,9 +26,12 @@ import { ValidationPipe } from 'src/validation/validation.pipe'
 import { ParseIntPipe } from 'src/parse-int/parse-int.pipe'
 import { RolesGuard } from 'src/roles/roles.guard'
 import { Roles } from 'src/roles/roles.decorator'
+import { LoggingInterceptor } from 'src/logging/logging.interceptor'
+import { TransformInterceptor } from 'src/transform/transform.interceptor'
 
 @Controller('cats')
 @UseGuards(RolesGuard)
+@UseInterceptors(LoggingInterceptor, TransformInterceptor)
 @UseFilters(HttpExceptionFilter)
 export class CatsController {
   constructor(private readonly catsService: CatsService) {}
